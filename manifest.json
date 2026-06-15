@@ -1,0 +1,17 @@
+{
+  "name": "CurryBoy 營業小助理",
+  "short_name": "CurryBoy",
+  "description": "CurryBoy 舖頭營業額、支出、待辦、idea、購物清單小助理",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1c1b1a",
+  "theme_color": "#1c1b1a",
+  "lang": "zh-HK",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
