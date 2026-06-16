@@ -11,9 +11,22 @@ const CONFIGURED =
 const db = CONFIGURED ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 /* ====== 2. 常數 ====== */
-const EXPENSE_CATS = ["食材", "包材", "人工", "租金", "水電煤", "平台費用", "維修", "雜項"];
+const EXPENSE_CATS = ["食材", "包材", "人工", "租金", "水電煤", "維修", "雜項"];
 const TODO_CATS = ["重要", "次重要", "有空才處理"];
 const TAB_VIEWS = ["home", "todos", "ideas", "shopping", "brain"];
+
+/* 外賣店成本參考比例（成本率 = 分類支出 ÷ 本月收入 × 100）
+   ≤ idealMax → 健康(綠)；idealMax~danger → 偏高(橙)；> danger → 超標(紅) */
+const COST_REF = [
+  { cat: "食材",  idealMin: 25, idealMax: 30, danger: 35 },
+  { cat: "人工",  idealMin: 15, idealMax: 20, danger: 25 },
+  { cat: "租金",  idealMin: 8,  idealMax: 12, danger: 15 },
+  { cat: "包材",  idealMin: 3,  idealMax: 5,  danger: 8  },
+  { cat: "水電煤", idealMin: 2,  idealMax: 5,  danger: 8  },
+  { cat: "維修",  idealMin: 0,  idealMax: 3,  danger: 5  },
+  { cat: "雜項",  idealMin: 0,  idealMax: 5,  danger: 8  },
+];
+const pct = (r) => (!r ? "0%" : r < 10 ? r.toFixed(1) + "%" : Math.round(r) + "%");
 
 /* Foodpanda 平台佣金：輸入原數，顯示時自動扣
    2026-05-21～2026-09-30 扣 15%（×0.85）；2026-10-01 起扣 30%（×0.70）*/
@@ -365,7 +378,79 @@ async function renderBalance() {
         <span class="lbl">本月支出</span><span class="val" style="color:var(--loss);font-size:18px">− $${money(expSum)}</span></div>
       <div class="sum-box" style="padding-top:14px">
         <span class="lbl">Balance</span><span class="val" style="color:${bal >= 0 ? "var(--profit)" : "var(--loss)"}">$${money(bal)}</span></div>
+    </div>
+    ${costChart(revSum, exp)}`;
+}
+
+// ---- 外賣店成本健康（橫向 bar）----
+function costChart(revSum, exp) {
+  const head = `<div class="section-head" style="margin-top:6px"><h2>外賣店成本健康</h2></div>`;
+  if (!revSum) return head + `<div class="empty">本月未有收入，暫時未能分析成本比例</div>`;
+
+  const sums = {};
+  exp.forEach((r) => (sums[r.category] = (sums[r.category] || 0) + Number(r.amount)));
+
+  // ---- 總覽（總成本佔收入 + 盈利率）----
+  const totalCost = exp.reduce((a, r) => a + Number(r.amount), 0);
+  const tRate = (totalCost / revSum) * 100;
+  const margin = 100 - tRate;
+  let tst, tsc;
+  if (tRate <= 75) { tst = "健康"; tsc = "green"; }
+  else if (tRate <= 85) { tst = "偏高"; tsc = "orange"; }
+  else { tst = "超標"; tsc = "red"; }
+  const tTrackMax = 85 / 0.7;
+  const tFill = Math.min((tRate / tTrackMax) * 100, 100);
+  const tIdeal = (75 / tTrackMax) * 100;
+  const f1 = (x) => x.toFixed(1) + "%";
+  const marginTxt = margin >= 0 ? `盈利率 ${f1(margin)}` : `虧損率 ${f1(-margin)}`;
+  const marginCol = margin >= 0 ? "var(--profit)" : "var(--loss)";
+  const overview = `<div class="cost-overview">
+      <div class="co-top">
+        <div><div class="co-label">本月總成本佔收入</div><div class="co-big ${tsc}">${f1(tRate)}</div></div>
+        <div class="co-right"><span class="cost-status ${tsc}">${tst}</span>
+          <div class="co-margin" style="color:${marginCol}">${marginTxt}</div></div>
+      </div>
+      <div class="cost-track big">
+        <div class="cost-fill ${tsc}" style="width:${tFill.toFixed(1)}%"></div>
+        <span class="cost-tick ideal" style="left:${tIdeal.toFixed(1)}%"></span>
+        <span class="cost-tick danger" style="left:70%"></span>
+      </div>
+      <div class="cost-foot"><span class="cost-fig">總支出 $${money(totalCost)}</span>
+        <span class="cost-range">理想 ≤75%　危險線 85%</span></div>
     </div>`;
+
+  // ---- 各分類明細 ----
+  const rows = COST_REF.map((ref) => {
+    const amt = sums[ref.cat] || 0;
+    const rate = (amt / revSum) * 100;
+    let st, sc;
+    if (rate <= ref.idealMax) { st = "健康"; sc = "green"; }
+    else if (rate <= ref.danger) { st = "偏高"; sc = "orange"; }
+    else { st = "超標"; sc = "red"; }
+    const trackMax = ref.danger / 0.7;            // 危險線固定喺 70% 位置
+    const fill = Math.min((rate / trackMax) * 100, 100);
+    const idealPos = (ref.idealMax / trackMax) * 100;
+    return `<div class="cost-row">
+        <div class="cost-head">
+          <span class="cost-name">${ref.cat}</span>
+          <span class="cost-status ${sc}">${st}</span>
+        </div>
+        <div class="cost-track">
+          <div class="cost-fill ${sc}" style="width:${fill.toFixed(1)}%"></div>
+          <span class="cost-tick ideal" style="left:${idealPos.toFixed(1)}%"></span>
+          <span class="cost-tick danger" style="left:70%"></span>
+        </div>
+        <div class="cost-foot">
+          <span class="cost-fig">$${money(amt)} · ${pct(rate)}</span>
+          <span class="cost-range">理想 ${ref.idealMin}–${ref.idealMax}%　危險線 ${ref.danger}%</span>
+        </div>
+      </div>`;
+  }).join("");
+
+  return head + overview +
+    `<p class="cost-sub">各分類明細</p>
+     <div class="cost-list">${rows}</div>
+     <p class="cost-note">成本率 = 該分類本月支出 ÷ 本月收入（已扣平台佣金）。淺線＝理想上限，深線＝危險線，比例參考外賣店。</p>`;
 }
 
 // ---- 收起式新增掣 ----

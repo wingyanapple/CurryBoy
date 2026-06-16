@@ -285,6 +285,48 @@ input[type="number"] { font-variant-numeric: tabular-nums; }
 /* 小提示（例如 Foodpanda 扣佣金後）*/
 .hint { font-size: 12.5px; color: var(--curry); margin-top: 7px; }
 
+/* ---- 外賣店成本健康（橫向 bar）---- */
+.cost-list { display: flex; flex-direction: column; gap: 17px; margin-top: 4px; }
+.cost-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cost-name { font-size: 15px; color: var(--text); }
+.cost-status { font-size: 12px; font-weight: 600; padding: 2px 11px; border-radius: 999px; }
+.cost-status.green  { color: var(--profit); background: rgba(134,169,129,0.15); }
+.cost-status.orange { color: var(--curry);  background: var(--curry-soft); }
+.cost-status.red    { color: var(--loss);   background: rgba(207,128,104,0.16); }
+
+.cost-track {
+  position: relative; height: 14px; border-radius: 999px;
+  background: var(--surface-2); overflow: hidden;
+}
+.cost-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; }
+.cost-fill.green  { background: var(--profit); }
+.cost-fill.orange { background: var(--curry); }
+.cost-fill.red    { background: var(--loss); }
+.cost-tick { position: absolute; top: 0; height: 100%; width: 2px; transform: translateX(-1px); }
+.cost-tick.ideal  { background: rgba(236,232,224,0.22); }
+.cost-tick.danger { background: rgba(236,232,224,0.55); }
+
+.cost-foot { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-top: 7px; }
+.cost-fig { font-size: 13px; color: var(--text); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cost-range { font-size: 11px; color: var(--text-dim); text-align: right; }
+.cost-note { font-size: 11.5px; color: var(--text-dim); line-height: 1.55; margin-top: 16px; }
+
+/* 成本總覽 */
+.cost-overview {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 16px 17px; margin-bottom: 20px;
+}
+.co-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 15px; }
+.co-label { font-size: 12.5px; color: var(--text-soft); margin-bottom: 5px; }
+.co-big { font-size: 34px; font-weight: 500; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.co-big.green { color: var(--profit); }
+.co-big.orange { color: var(--curry); }
+.co-big.red { color: var(--loss); }
+.co-right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 9px; }
+.co-margin { font-size: 13px; font-variant-numeric: tabular-nums; }
+.cost-track.big { height: 18px; }
+.cost-sub { font-size: 12.5px; color: var(--text-soft); margin: 0 2px 12px; }
+
 /* ---- 空狀態 ---- */
 .empty {
   text-align: center; color: var(--text-dim); padding: 44px 20px;
