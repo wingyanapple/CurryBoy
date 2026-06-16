@@ -1,13 +1,10 @@
-/* CurryBoy 營業小助理 — service worker */
-const CACHE = "curryboy-v1";
+/* CurryBoy 營業小助理 — service worker
+   v3：改用「network-first」，每次有網絡都攞最新檔案，
+   只有冇網絡先用快取。咁就唔會再卡住舊版 app.js / 舊 key。 */
+const CACHE = "curryboy-v3";
 const SHELL = [
-  "./",
-  "./index.html",
-  "./style.css",
-  "./app.js",
-  "./manifest.json",
-  "./icon-192.png",
-  "./icon-512.png",
+  "./","./index.html","./style.css","./app.js",
+  "./manifest.json","./icon-192.png","./icon-512.png",
 ];
 
 self.addEventListener("install", (e) => {
@@ -18,31 +15,27 @@ self.addEventListener("install", (e) => {
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
-  // Supabase / CDN 等網絡請求：直接行網絡，唔快取
-  if (url.origin !== location.origin) return;
+  if (url.origin !== location.origin) return;        // Supabase / CDN：直接行網絡
   if (e.request.method !== "GET") return;
 
-  // 同源靜態檔案：cache-first，背景更新
+  // network-first：先攞最新，失敗（離線）先用快取
   e.respondWith(
-    caches.match(e.request).then((cached) => {
-      const net = fetch(e.request)
-        .then((res) => {
-          if (res && res.status === 200) {
-            const copy = res.clone();
-            caches.open(CACHE).then((c) => c.put(e.request, copy));
-          }
-          return res;
-        })
-        .catch(() => cached);
-      return cached || net;
-    })
+    fetch(e.request)
+      .then((res) => {
+        if (res && res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(e.request, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(e.request).then((c) => c || caches.match("./index.html")))
   );
 });
