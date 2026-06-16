@@ -4,7 +4,7 @@
 
 /* ====== 1. 設定（部署前填呢兩個值）====== */
 const SUPABASE_URL = "https://kpjilykqswlogxhjmnwj.supabase.co";
-const SUPABASE_KEY = "sb_publishable_ElTlqso9o9FIi2VHUQ9CUQ_nDIcSq";
+const SUPABASE_KEY = "sb_publishable_ElTlqso9o9FIi2VHUQ9CUQ_nDIcSq32";
 
 const CONFIGURED =
   !SUPABASE_URL.includes("YOUR_") && !SUPABASE_KEY.includes("YOUR_");
