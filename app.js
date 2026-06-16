@@ -3,8 +3,8 @@
    ============================================================ */
 
 /* ====== 1. 設定（部署前填呢兩個值）====== */
-const SUPABASE_URL = "YOUR_SUPABASE_URL";          // 例：https://abcd1234.supabase.co
-const SUPABASE_KEY = "YOUR_SUPABASE_PUBLISHABLE_KEY"; // sb_publishable_xxx 或 anon key
+const SUPABASE_URL = "https://kpjilykqswlogxhjmnwj.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ElTlqso9o9FIi2VHUQ9CUQ_nDIcSq";
 
 const CONFIGURED =
   !SUPABASE_URL.includes("YOUR_") && !SUPABASE_KEY.includes("YOUR_");
